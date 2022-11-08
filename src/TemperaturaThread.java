@@ -1,6 +1,8 @@
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class TemperaturaThread extends Thread implements Runnable {
 
@@ -27,6 +29,7 @@ public class TemperaturaThread extends Thread implements Runnable {
         while (true) {
             try {
                 mudarTemperatura(enviarPacket("st-0"));
+
                 Thread.sleep(50);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -42,23 +45,36 @@ public class TemperaturaThread extends Thread implements Runnable {
 
         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipAddress, porta);
 
+        Long tempoInicial = new Date().getTime();
+
         try {
             socket.send(sendPacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return receberPacket(receiveData);
+        return receberPacket(receiveData, tempoInicial);
     }
 
-    public DatagramPacket receberPacket(byte[] receiveData) {
+    public DatagramPacket receberPacket(byte[] receiveData, Long tempoInicial) {
         DatagramPacket receivePacket = new DatagramPacket(receiveData,
                 receiveData.length);
+
+        Long tempoFinal = new Date().getTime();
+
+        Long diferencaTempo = tempoInicial - tempoFinal;
+
+        ArrayList<Long> lista = new ArrayList<Long>();
+
+        lista.add(diferencaTempo);
+
+        System.out.println("Tempo de resposta: " + lista.get(0));
 
         try {
             socket.receive(receivePacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return receivePacket;
     }
 
