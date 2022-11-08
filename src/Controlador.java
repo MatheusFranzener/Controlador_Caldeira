@@ -1,43 +1,29 @@
-import java.io.*;
-import java.net.*;
 
-class Controlador {
-    public static void main(String args[]) throws Exception {
+import javax.swing.*;
 
-        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(
-                System.in));
+public class Controlador {
+    private JPanel panel1;
+    public JLabel temperatura;
+    public JLabel tanque;
+    public JLabel agua;
 
-        DatagramSocket clientSocket = new DatagramSocket();
+    public Controlador(){
+        JFrame frame = new JFrame("Controlador");
+        frame.setContentPane(panel1);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
 
-        String servidor = "localhost";
-        int porta = 9090;
-
-        InetAddress IPAddress = InetAddress.getByName(servidor);
-
-        byte[] sendData = new byte[1024];
-        byte[] receiveData = new byte[1024];
-
-        System.out.println("Digite o texto a ser enviado ao servidor: ");
-        String sentence = inFromUser.readLine();
-        sendData = sentence.getBytes();
-
-        DatagramPacket sendPacket = new DatagramPacket(sendData,
-                sendData.length, IPAddress, porta);
-
-        System.out.println("Enviando pacote UDP para " + servidor + ":" + porta);
-
-        clientSocket.send(sendPacket);
-
-        DatagramPacket receivePacket = new DatagramPacket(receiveData,
-                receiveData.length);
-
-        clientSocket.receive(receivePacket);
-        System.out.println("Pacote UDP recebido...");
-
-        String modifiedSentence = new String(receivePacket.getData());
-
-        System.out.println("Texto recebido do servidor: " + modifiedSentence);
-        clientSocket.close();
-        System.out.println("Socket cliente fechado!");
+        TemperaturaThread temperaturaThread = new TemperaturaThread(this);
+        temperaturaThread.start();
+        SaidaAguaThread saidaAguaThread = new SaidaAguaThread(this);
+        saidaAguaThread.start();
+        TanqueThread tanqueThread = new TanqueThread(this);
+        tanqueThread.start();
     }
+
+    public static void main(String[] args) {
+        new Controlador();
+    }
+
 }
