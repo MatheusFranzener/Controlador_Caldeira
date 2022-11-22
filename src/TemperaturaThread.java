@@ -1,6 +1,10 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -37,7 +41,7 @@ public class TemperaturaThread extends Thread implements Runnable {
         }
     }
 
-    public DatagramPacket enviarPacket(String texto) {
+    public DatagramPacket enviarPacket(String texto) throws IOException {
         byte[] sendData;
         byte[] receiveData = new byte[1024];
 
@@ -45,29 +49,32 @@ public class TemperaturaThread extends Thread implements Runnable {
 
         DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ipAddress, porta);
 
-        Long tempoInicial = new Date().getTime();
+        LocalTime tempoIncial = java.time.LocalTime.now();
 
         try {
             socket.send(sendPacket);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return receberPacket(receiveData, tempoInicial);
+        return receberPacket(receiveData, tempoIncial.getNano());
     }
 
-    public DatagramPacket receberPacket(byte[] receiveData, Long tempoInicial) {
+    public DatagramPacket receberPacket(byte[] receiveData, int tempoInicial) throws IOException {
         DatagramPacket receivePacket = new DatagramPacket(receiveData,
                 receiveData.length);
 
-        Long tempoFinal = new Date().getTime();
+        LocalTime tempoFinal = java.time.LocalTime.now();
 
-        Long diferencaTempo = tempoInicial - tempoFinal;
+        int diferencaTempo = tempoFinal.getNano() - tempoInicial;
 
-        ArrayList<Long> lista = new ArrayList<Long>();
+        ArrayList<Integer> lista = new ArrayList<Integer>();
 
         lista.add(diferencaTempo);
 
-        System.out.println("Tempo de resposta: " + lista.get(0));
+        for (int i = 0; i < lista.size(); i++) {
+            criarArquivoTXT(lista.get(i));
+            System.out.println("Tempo de resposta: " + lista.get(i));
+        }
 
         try {
             socket.receive(receivePacket);
@@ -84,6 +91,19 @@ public class TemperaturaThread extends Thread implements Runnable {
 
         Double novaTemperatura = Double.parseDouble(resposta);
         this.controlador.temperatura.setText(String.format("%.2f", novaTemperatura));
+    }
+
+    public void criarArquivoTXT(int tempoResposta) throws IOException {
+        FileWriter arq = new FileWriter("C:\\Users\\matheus_hohmann\\Desktop\\tempo_resposta.txt", true);
+        BufferedWriter gravarArq = new BufferedWriter(arq);
+
+        Date dataAtual = new Date();
+
+        gravarArq.write("Data Atual -  " + dataAtual + " - Tempo de resposta (ms): " + tempoResposta);
+        gravarArq.newLine();
+
+        gravarArq.close();
+        arq.close();
     }
 
 }
